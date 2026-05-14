@@ -1,0 +1,10 @@
+@"
+data/
+*.mkv
+*.mp4
+*.zip
+*.npy
+__pycache__/
+*.pyc
+.env
+"@ | Out-File -Encoding UTF8 .gitignore
