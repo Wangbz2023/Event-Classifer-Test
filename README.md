@@ -114,5 +114,8 @@ dl.downloadGame(
 data/soccernet/raw/as2023/england_epl/2014-2015/2015-02-21 - 18-00 Chelsea 1 - 1 Burnley/
 ```
 
+## 数据集分析文档
+
+- `docs/gamestate_2024_dataset_format.md`：SoccerNet `gamestate-2024` 的 `Labels-GameState.json` 格式、字段含义、坐标系统和事件分类接口分析。
 
 
