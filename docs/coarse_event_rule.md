@@ -238,4 +238,35 @@ PCBAS 的最小原子事件就是每一条 `cls > 0` 的记录：
 
 这套规则和 PCBAS 的数据能力是匹配的，而且后面很容易接 `GSR/Tracking` 做位置增强。
 
-如果你愿意，我下一步可以直接把这套规则写成一份 `PCBAS -> coarse event` 的正式设计文档，或者直接落成一个 Python 原型脚本。
+## 8. 当前仓库里的可运行实现
+
+当前规则已经落成脚本：
+
+```bash
+python scripts/build_pcbas_clip_manifest.py
+```
+
+脚本做四件事：
+
+1. 从 H5 里筛选 `cls > 0` 的 player-centric action anchor。
+2. 依据 `team_side` 切换、动作族变化、`Δframe`、位置跳变等信号切成粗语义段。
+3. 把粗语义段投影到固定 4 秒 clip。
+4. 为每个 clip 输出 `primary_coarse_event` 与 `memory_update`。
+
+推荐先在单个半场上验证：
+
+```bash
+python scripts/build_pcbas_clip_manifest.py --sequences game_18_H1
+```
+
+生成小样例：
+
+```bash
+python scripts/build_pcbas_clip_manifest.py \
+  --sequences game_18_H1 \
+  --events-only \
+  --clip-limit 30 \
+  --output-path data/pcbas2026/samples/game_18_H1_clip_manifest_4s_30.jsonl
+```
+
+输出的 `memory_update` 目前是规则弱监督：当 clip 内出现新语义段起点，或 `primary_coarse_event` 相对上一 clip 变化时置为 `true`。等视频可用后，可以直接用同一份 manifest 对齐 4 秒视频 clip。

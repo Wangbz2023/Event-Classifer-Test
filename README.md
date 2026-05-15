@@ -205,6 +205,55 @@ python scripts/inspect_sn_pcbas_h5.py \
 
 这个输出会很大，默认不建议提交到仓库。
 
+## 构建 4s Clip 标签
+
+在视频解压之前，也可以只用 H5 标注先构建 event-vstream 风格的标签 manifest：
+
+```text
+PCABS H5
+-> cls > 0 action anchors
+-> coarse semantic segments
+-> 4s clip labels
+-> memory_update
+```
+
+默认读取 validation H5，并按 25 fps、4 秒窗口输出到 `processed/`：
+
+```bash
+python scripts/build_pcbas_clip_manifest.py
+```
+
+只处理一个半场：
+
+```bash
+python scripts/build_pcbas_clip_manifest.py --sequences game_18_H1
+```
+
+生成一个小样例到 `samples/`：
+
+```bash
+python scripts/build_pcbas_clip_manifest.py \
+  --sequences game_18_H1 \
+  --events-only \
+  --clip-limit 30 \
+  --output-path data/pcbas2026/samples/game_18_H1_clip_manifest_4s_30.jsonl
+```
+
+输出字段里最关键的是：
+
+```text
+clip_start_sec / clip_end_sec
+fine_action_counts
+action_family_counts
+primary_coarse_event
+memory_update
+memory_update_reasons
+segment_ids_starting
+representative_events
+```
+
+其中 `memory_update=true` 表示这个 clip 内出现了新的粗语义段起点，或粗粒度事件标签相对前一个 clip 发生变化。这个标签可以先作为 memory token 是否更新的弱监督目标；等视频可用后，再把同一个 manifest 与 4 秒视频片段对齐。
+
 ## Git 数据策略
 
 仓库只提交：
