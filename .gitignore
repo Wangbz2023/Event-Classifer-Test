@@ -1,10 +1,28 @@
-@"
-data/
-*.mkv
-*.mp4
-*.zip
-*.npy
+# Python
 __pycache__/
 *.pyc
 .env
-"@ | Out-File -Encoding UTF8 .gitignore
+
+# Large local data and model artifacts
+*.zip
+*.h5
+*.mkv
+*.mp4
+*.npy
+*.npz
+
+# PCABS2026 local data layout
+data/pcbas2026/raw/
+data/pcbas2026/extracted/
+data/pcbas2026/processed/
+
+# Keep small examples under version control.
+!data/
+!data/pcbas2026/
+!data/pcbas2026/samples/
+!data/pcbas2026/samples/*.json
+!data/pcbas2026/samples/*.jsonl
+!data/pcbas2026/samples/*.csv
+
+# Legacy local data locations from earlier experiments.
+data/soccernet/

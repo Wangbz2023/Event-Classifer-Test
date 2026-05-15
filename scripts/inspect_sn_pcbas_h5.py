@@ -1,7 +1,7 @@
 """Inspect extracted SN-PCBAS-2026 tactical HDF5 files.
 
 This script is meant for files such as:
-data/soccernet/raw/sn-pcbas-2026/val_tactical_data.h5
+data/pcbas2026/extracted/VAL/val_tactical_data.h5
 
 It reports validated structure information, per-sequence summary statistics,
 sample event rows, and can export the HDF5 content to readable JSON, JSONL,
@@ -74,7 +74,11 @@ def repo_root() -> Path:
 
 
 def default_h5_path() -> Path:
-    return repo_root() / "data" / "soccernet" / "raw" / "sn-pcbas-2026" / "val_tactical_data.h5"
+    return repo_root() / "data" / "pcbas2026" / "extracted" / "VAL" / "val_tactical_data.h5"
+
+
+def default_processed_root() -> Path:
+    return repo_root() / "data" / "pcbas2026" / "processed"
 
 
 def parse_args() -> argparse.Namespace:
@@ -85,7 +89,7 @@ def parse_args() -> argparse.Namespace:
         "--h5-path",
         type=Path,
         default=default_h5_path(),
-        help="Path to a tactical HDF5 file such as val_tactical_data.h5.",
+        help="Path to a tactical HDF5 file. Defaults to data/pcbas2026/extracted/VAL/val_tactical_data.h5.",
     )
     parser.add_argument(
         "--sequence",
@@ -129,7 +133,7 @@ def parse_args() -> argparse.Namespace:
         "--output-path",
         type=Path,
         default=None,
-        help="Optional export path. Defaults to a derived file next to the HDF5 file.",
+        help="Optional export path. Defaults to data/pcbas2026/processed/.",
     )
     return parser.parse_args()
 
@@ -236,9 +240,7 @@ def default_output_path(
     export_format: str,
 ) -> Path:
     sequence_suffix = f"_{sequence}" if sequence else "_all_sequences"
-    return h5_path.with_suffix("") .with_name(
-        f"{h5_path.stem}{sequence_suffix}_{export_scope}.{export_format}"
-    )
+    return default_processed_root() / f"{h5_path.stem}{sequence_suffix}_{export_scope}.{export_format}"
 
 
 def write_json(path: Path, rows: list[dict[str, Any]], metadata: dict[str, Any]) -> None:

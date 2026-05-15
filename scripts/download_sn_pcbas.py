@@ -37,7 +37,7 @@ def repo_root() -> Path:
 
 
 def default_data_root() -> Path:
-    return repo_root() / "data" / "soccernet" / "raw" / "sn-pcbas-2026"
+    return repo_root() / "data" / "pcbas2026" / "raw"
 
 
 def parse_args() -> argparse.Namespace:
@@ -48,7 +48,7 @@ def parse_args() -> argparse.Namespace:
         "--data-root",
         type=Path,
         default=default_data_root(),
-        help="Download root. Defaults to data/soccernet/raw/sn-pcbas-2026.",
+        help="Download root. Defaults to data/pcbas2026/raw.",
     )
     parser.add_argument(
         "--dataset-repo",

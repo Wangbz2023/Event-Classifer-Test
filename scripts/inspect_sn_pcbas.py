@@ -40,11 +40,11 @@ def repo_root() -> Path:
 
 
 def default_data_root() -> Path:
-    return repo_root() / "data" / "soccernet" / "raw" / "sn-pcbas-2026"
+    return repo_root() / "data" / "pcbas2026" / "raw"
 
 
 def default_output_root() -> Path:
-    return default_data_root() / "extracted"
+    return repo_root() / "data" / "pcbas2026" / "extracted"
 
 
 def parse_args() -> argparse.Namespace:
@@ -55,7 +55,7 @@ def parse_args() -> argparse.Namespace:
         "--data-root",
         type=Path,
         default=default_data_root(),
-        help="Dataset root. Defaults to data/soccernet/raw/sn-pcbas-2026.",
+        help="Dataset root. Defaults to data/pcbas2026/raw.",
     )
     parser.add_argument(
         "--splits",
@@ -89,7 +89,7 @@ def parse_args() -> argparse.Namespace:
         "--output-root",
         type=Path,
         default=default_output_root(),
-        help="Extraction root. Defaults to data/soccernet/raw/sn-pcbas-2026/extracted.",
+        help="Extraction root. Defaults to data/pcbas2026/extracted.",
     )
     return parser.parse_args()
 
