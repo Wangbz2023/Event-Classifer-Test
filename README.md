@@ -70,7 +70,45 @@ data/pcbas2026/raw/TRAIN/tactical_data_TRAIN.zip
 data/pcbas2026/raw/VAL/tactical_data_VAL.zip
 ```
 
-默认不下载视频。视频文件体积更大，也不是当前事件划分链路的必要输入。
+默认不下载视频。视频文件体积更大，也不是当前事件划分链路的必要输入。确实需要视频时，用 `--with-video`：
+
+```bash
+python scripts/download_sn_pcbas.py --splits VAL --with-video
+```
+
+这会下载 tactical zip 和默认的 `352x640` 视频 zip，例如：
+
+```text
+data/pcbas2026/raw/VAL/tactical_data_VAL.zip
+data/pcbas2026/raw/VAL/videos_352x640_VAL.zip
+```
+
+如果 tactical data 已经下载过，只想补视频，用：
+
+```bash
+python scripts/download_sn_pcbas.py --splits VAL --video-only
+```
+
+下载 fullHD 视频时显式指定清晰度：
+
+```bash
+python scripts/download_sn_pcbas.py --splits VAL --video-only --video-quality fullHD
+```
+
+`TRAIN` 的 fullHD 视频在 Hugging Face 上拆成多个分卷，脚本会依次下载：
+
+```bash
+python scripts/download_sn_pcbas.py --splits TRAIN --video-only --video-quality fullHD
+```
+
+如果 Hugging Face 文件名后续变化，可以用 `--video-archive-name` 覆盖。例如：
+
+```bash
+python scripts/download_sn_pcbas.py \
+  --splits VAL \
+  --video-only \
+  --video-archive-name VAL=videos_352x640_VAL.zip
+```
 
 ## 解压与检查 zip
 

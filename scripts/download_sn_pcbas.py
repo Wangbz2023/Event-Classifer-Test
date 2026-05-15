@@ -16,6 +16,8 @@ DEFAULT_DATASET_REPO = "SoccerNet/SN-PCBAS-2026"
 DEFAULT_SPLITS = ["TRAIN", "VAL"]
 ALL_SPLITS = ["TRAIN", "VAL", "CHALLENGE"]
 DEFAULT_TOKEN_ENV = "HF_TOKEN"
+DEFAULT_VIDEO_QUALITY = "352x640"
+VIDEO_QUALITIES = ["352x640", "fullHD"]
 
 # Publicly visible filenames may evolve. Keep the mapping explicit and
 # adjustable through CLI args rather than assuming SoccerNetDownloader support.
@@ -25,10 +27,23 @@ TACTICAL_ARCHIVES = {
     "CHALLENGE": "tactical_data_CHALLENGE.zip",
 }
 
-VIDEO_ARCHIVES = {
-    "TRAIN": "videos_train.zip",
-    "VAL": "videos_val.zip",
-    "CHALLENGE": "videos_challenge.zip",
+VIDEO_ARCHIVES_BY_QUALITY = {
+    "352x640": {
+        "TRAIN": ["videos_352x640_TRAIN.zip"],
+        "VAL": ["videos_352x640_VAL.zip"],
+        "CHALLENGE": ["videos_352x640_CHALLENGE.zip"],
+    },
+    "fullHD": {
+        "TRAIN": [
+            "videos_fullHD_TRAIN_01.zip",
+            "videos_fullHD_TRAIN_02.zip",
+            "videos_fullHD_TRAIN_03.zip",
+            "videos_fullHD_TRAIN_04.zip",
+            "videos_fullHD_TRAIN_05.zip",
+        ],
+        "VAL": ["videos_fullHD_VAL.zip"],
+        "CHALLENGE": ["videos_fullHD_CHALLENGE.zip"],
+    },
 }
 
 
@@ -65,7 +80,21 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--with-video",
         action="store_true",
-        help="Also download split-level video archives.",
+        help=(
+            "Also download split-level video archives. Defaults to 352x640 "
+            "video archives unless --video-quality is set."
+        ),
+    )
+    parser.add_argument(
+        "--video-only",
+        action="store_true",
+        help="Download only video archives and skip tactical-data archives.",
+    )
+    parser.add_argument(
+        "--video-quality",
+        choices=VIDEO_QUALITIES,
+        default=DEFAULT_VIDEO_QUALITY,
+        help="Video archive quality to download when video is requested.",
     )
     parser.add_argument(
         "--hf-token-env",
@@ -93,8 +122,9 @@ def parse_args() -> argparse.Namespace:
         default=[],
         metavar="SPLIT=FILENAME",
         help=(
-            "Override a video archive filename, for example "
-            "VAL=videos_VAL.zip."
+            "Override video archive filenames for a split, for example "
+            "VAL=videos_352x640_VAL.zip. Repeat the argument or separate "
+            "filenames with commas for multi-part splits."
         ),
     )
     return parser.parse_args()
@@ -121,17 +151,45 @@ def parse_override(values: list[str], allowed_splits: list[str]) -> dict[str, st
     return mapping
 
 
+def parse_video_override(
+    values: list[str],
+    allowed_splits: list[str],
+) -> dict[str, list[str]]:
+    mapping: dict[str, list[str]] = {}
+    for value in values:
+        if "=" not in value:
+            raise SystemExit(
+                f"Invalid override '{value}'. Expected the form SPLIT=FILENAME."
+            )
+        split, filenames = value.split("=", 1)
+        split = split.strip().upper()
+        filenames = filenames.strip()
+        if split not in allowed_splits:
+            raise SystemExit(
+                f"Invalid split in override '{value}'. Expected one of: "
+                f"{', '.join(allowed_splits)}."
+            )
+        parsed_names = [name.strip() for name in filenames.split(",") if name.strip()]
+        if not parsed_names:
+            raise SystemExit(f"Missing filename in override '{value}'.")
+        mapping.setdefault(split, []).extend(parsed_names)
+    return mapping
+
+
 def planned_files(
     splits: list[str],
     with_video: bool,
+    video_only: bool,
     tactical_archives: dict[str, str],
-    video_archives: dict[str, str],
+    video_archives: dict[str, list[str]],
 ) -> list[tuple[str, str]]:
     downloads: list[tuple[str, str]] = []
     for split in splits:
-        downloads.append((split, tactical_archives[split]))
-        if with_video:
-            downloads.append((split, video_archives[split]))
+        if not video_only:
+            downloads.append((split, tactical_archives[split]))
+        if with_video or video_only:
+            for filename in video_archives[split]:
+                downloads.append((split, filename))
     return downloads
 
 
@@ -171,14 +229,28 @@ def summarize_files(data_root: Path, downloads: list[tuple[str, str]]) -> None:
 def main() -> int:
     args = parse_args()
     tactical_archives = {**TACTICAL_ARCHIVES, **parse_override(args.tactical_archive_name, ALL_SPLITS)}
-    video_archives = {**VIDEO_ARCHIVES, **parse_override(args.video_archive_name, ALL_SPLITS)}
-    downloads = planned_files(args.splits, args.with_video, tactical_archives, video_archives)
+    video_archives = {
+        split: list(filenames)
+        for split, filenames in VIDEO_ARCHIVES_BY_QUALITY[args.video_quality].items()
+    }
+    video_archives.update(parse_video_override(args.video_archive_name, ALL_SPLITS))
+    downloads = planned_files(
+        args.splits,
+        args.with_video,
+        args.video_only,
+        tactical_archives,
+        video_archives,
+    )
 
     print("SN-PCBAS-2026 download plan")
     print(f"- data root: {args.data_root}")
     print(f"- dataset repo: {args.dataset_repo}")
     print(f"- splits: {', '.join(args.splits)}")
     print(f"- with video: {args.with_video}")
+    print(f"- video only: {args.video_only}")
+    print(
+        f"- video quality: {args.video_quality if args.with_video or args.video_only else 'not requested'}"
+    )
     print(f"- token env: {args.hf_token_env}")
     print(f"- dry run: {args.dry_run}")
     print("- files:")

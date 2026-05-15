@@ -54,9 +54,25 @@
 公开说明显示数据通常拆成两类压缩包：
 
 - `tactical_data_*.zip`
-- `videos_*.zip`
+- `videos_352x640_*.zip`
+- `videos_fullHD_*.zip`
 
 其中 tactical data 是当前最关心的标注包。视频 zip 可能还伴随 SoccerNet 侧的额外访问或解压密码要求。对当前目标来说，优先级应放在标注包而不是视频包。
+
+当前下载脚本已经支持视频，但默认不启用。常用命令：
+
+```bash
+# tactical data + 默认 352x640 视频
+python scripts/download_sn_pcbas.py --splits VAL --with-video
+
+# 只补 352x640 视频
+python scripts/download_sn_pcbas.py --splits VAL --video-only
+
+# 只补 fullHD 视频
+python scripts/download_sn_pcbas.py --splits VAL --video-only --video-quality fullHD
+```
+
+需要注意，`TRAIN` split 的 fullHD 视频是多分卷 zip，脚本会按公开文件名依次下载 `videos_fullHD_TRAIN_01.zip` 到 `videos_fullHD_TRAIN_05.zip`。
 
 ### 3.3 访问失败的典型原因
 
